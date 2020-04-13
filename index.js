@@ -69,11 +69,13 @@ module.exports = async (opts) => {
     rendererSettings = { },
     style = { },
     inject = { },
-    puppeteerOptions = { },
+    puppeteerOptions = {
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
+    },
     ffmpegOptions = {
-      crf: 20,
+      crf: 16,
       profileVideo: 'main',
-      preset: 'medium'
+      preset: 'high'
     },
     gifskiOptions = {
       quality: 80,
@@ -309,23 +311,17 @@ ${inject.body || ''}
         }
 
         ffmpegArgs.push(
-          '-f', 'lavfi', '-i', `color=c=black:size=${width}x${height}`,
-          '-f', 'image2pipe', '-c:v', 'png', '-r', `${fps}`, '-i', '-',
-          '-filter_complex', `[0:v][1:v]overlay[o];[o]${scale}:flags=bicubic[out]`,
-          '-map', '[out]',
-          '-c:v', 'libx264',
-          '-profile:v', ffmpegOptions.profileVideo,
-          '-preset', ffmpegOptions.preset,
-          '-crf', ffmpegOptions.crf,
-          '-movflags', 'faststart',
-          '-pix_fmt', 'yuv420p'
+        '-f', 'image2pipe', '-c:v', 'png', '-r', fps, '-i', '-',
+        '-vf', scale,
+        '-c:v', 'libx264',
+        '-profile:v', ffmpegOptions.profileVideo,
+        '-preset', ffmpegOptions.preset,
+        '-crf', ffmpegOptions.crf,
+        '-movflags', 'faststart',
+        '-pix_fmt', 'yuv420p',
+        '-an', output
         )
       }
-
-      ffmpegArgs.push(
-        '-frames:v', `${numOutputFrames}`,
-        '-an', output
-      )
 
       console.log(ffmpegArgs.join(' '))
 
